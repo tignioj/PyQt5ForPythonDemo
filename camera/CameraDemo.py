@@ -69,6 +69,7 @@ class CameraDemo(QMainWindow):
 
             # Resize frame of video to 1/4 size for faster face recognition processing
             # small_frame = cv2.resize(frame, (0, 0), fx=1 / self.scale, fy=1 / self.scale)
+            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             detected_img = self.faceDetect(frame)
             # detected_img = frame
             self.new_frame_time = time.time()
@@ -78,9 +79,7 @@ class CameraDemo(QMainWindow):
             cv2.putText(detected_img, "FPS:" + fps, (7, 70), self.font, 3, (100, 255, 0), 3, cv2.LINE_AA)
             ShowVideo = cv2.cvtColor(detected_img, cv2.COLOR_BGR2RGB)
             showImage = QtGui.QImage(ShowVideo.data, ShowVideo.shape[1], ShowVideo.shape[0],
-
                                      QtGui.QImage.Format_RGB888)
-
             self.label.setPixmap(QPixmap.fromImage(showImage))
 
     def closeCamera(self):
