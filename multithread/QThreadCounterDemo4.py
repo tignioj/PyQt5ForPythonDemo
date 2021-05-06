@@ -1,3 +1,5 @@
+import time
+
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -11,27 +13,33 @@ sec = 0
 
 
 class WorkThread(QThread):
-    timer = pyqtSignal()  # 每隔1秒发送一次信号
-    end = pyqtSignal()  # 计数完成后发送一次信号
+    signal = pyqtSignal(dict)
+    fun = None
+    param = None
 
     def run(self):
-        while True:
-            self.sleep(1)  # 休眠1秒
-            if sec == 5:
-                self.end.emit()  # 发送end信号
-                break
-            self.timer.emit()
+        res = self.fun(self.param)
+        time.sleep(5)
+        self.signal.emit(res)
 
+    @staticmethod
+    def count(param):
+        print("count", param)
+        num = param['num']
+        return {'res': num + 1}
 
-
-
+    def invoke(self, fun, param):
+        self.fun = fun
+        self.param = param
+        print("invoke", fun, param)
+        self.start()
 
 
 class QThreadCounterDemo(QWidget):
     def __init__(self):
         super(QThreadCounterDemo, self).__init__()
         self.setWindowTitle('多线程计时器')
-        self.resize(300,120)
+        self.resize(300, 120)
         self.initUI()
 
     def initUI(self):
@@ -43,12 +51,14 @@ class QThreadCounterDemo(QWidget):
         layout.addWidget(button)
 
         self.workThread = WorkThread()
-
-        self.workThread.timer.connect(self.countTime)
-        self.workThread.end.connect(self.end)
+        self.workThread.signal.connect(self.handleRes)
         button.clicked.connect(self.work)
 
         self.setLayout(layout)
+
+    def handleRes(self, res):
+        print("handleRes", res)
+        self.lcdNumber.display(res['res'])
 
     def countTime(self):
         global sec
@@ -59,8 +69,7 @@ class QThreadCounterDemo(QWidget):
         QMessageBox.information(self, '消息', '计数结束', QMessageBox.Ok)
 
     def work(self):
-        self.workThread.start()
-
+        self.workThread.invoke(WorkThread.count, {'num': self.lcdNumber.value()})
 
 
 if __name__ == '__main__':
